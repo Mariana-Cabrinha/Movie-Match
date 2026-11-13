@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GENRES } from '../lib/genres'
-import { getOrCreateRoom, upsertMember, type GenrePrefs } from '../lib/room'
+import { upsertMember, type GenrePrefs, type Member } from '../lib/room'
+import { useRoom } from '../lib/useRoom'
+import { RoomStatus } from './RoomStatus'
 
 /** Ciclo do toque: tanto faz → gosto → não curto → tanto faz */
 function nextValue(v: 1 | -1 | undefined): 1 | -1 | undefined {
@@ -13,11 +15,21 @@ function nextValue(v: 1 | -1 | undefined): 1 | -1 | undefined {
 export default function Tastes() {
   const { roomId = '' } = useParams()
   const [params] = useSearchParams()
-  const navigate = useNavigate()
-  const editing = getOrCreateRoom(roomId).members.find((m) => m.id === params.get('m'))
+  const { state } = useRoom(roomId)
 
+  if (state.status !== 'ready') return <RoomStatus status={state.status} message={'message' in state ? state.message : undefined} />
+
+  const editing = state.room.members.find((m) => m.id === params.get('m'))
+  // key: recria o formulário com os dados certos ao trocar de pessoa
+  return <TastesForm key={editing?.id ?? 'novo'} roomId={roomId} editing={editing} />
+}
+
+function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
+  const navigate = useNavigate()
   const [name, setName] = useState(editing?.name ?? '')
   const [genres, setGenres] = useState<GenrePrefs>(editing?.genres ?? {})
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const liked = Object.values(genres).filter((v) => v === 1).length
 
@@ -31,15 +43,21 @@ export default function Tastes() {
     })
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    try {
+      await upsertMember(roomId, { id: editing?.id, name: name.trim(), genres })
+      navigate(`/s/${roomId}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+      setSaving(false)
+    }
+  }
+
   return (
-    <form
-      className="stack"
-      onSubmit={(e) => {
-        e.preventDefault()
-        upsertMember(roomId, { id: editing?.id, name: name.trim(), genres })
-        navigate(`/s/${roomId}`)
-      }}
-    >
+    <form className="stack" onSubmit={handleSubmit}>
       <h2>{editing ? 'Editar gostos' : 'Seus gostos'}</h2>
       <input
         className="input"
@@ -72,8 +90,9 @@ export default function Tastes() {
         })}
       </div>
 
-      <button className="btn primary big" type="submit" disabled={!name.trim() || liked === 0}>
-        {liked === 0 ? 'Escolha pelo menos 1 gênero' : 'Salvar'}
+      {error && <p className="error">{error}</p>}
+      <button className="btn primary big" type="submit" disabled={saving || !name.trim() || liked === 0}>
+        {saving ? 'Salvando…' : liked === 0 ? 'Escolha pelo menos 1 gênero' : 'Salvar'}
       </button>
     </form>
   )

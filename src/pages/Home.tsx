@@ -5,6 +5,20 @@ import { createRoom } from '../lib/room'
 export default function Home() {
   const navigate = useNavigate()
   const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleCreate() {
+    setBusy(true)
+    setError(null)
+    try {
+      const room = await createRoom()
+      navigate(`/s/${room.id}`)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e))
+      setBusy(false)
+    }
+  }
 
   return (
     <section className="stack center">
@@ -14,9 +28,10 @@ export default function Home() {
         Movie Match mostra o quanto vocês são compatíveis e o que assistir juntos.
       </p>
 
-      <button className="btn primary big" onClick={() => navigate(`/s/${createRoom().id}`)}>
-        Criar sala
+      <button className="btn primary big" onClick={handleCreate} disabled={busy}>
+        {busy ? 'Criando…' : 'Criar sala'}
       </button>
+      {error && <p className="error">{error}</p>}
 
       <form
         className="row"

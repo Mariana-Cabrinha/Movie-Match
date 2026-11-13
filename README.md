@@ -41,14 +41,29 @@ npm run dev
 
 Abra http://localhost:5173 no navegador.
 
+Sem configurar nada, o app roda em **modo local** (salas salvas só no navegador).
+
+### Ligando as salas na nuvem (Supabase)
+
+1. Crie uma conta grátis em https://supabase.com e um **New project**.
+2. No projeto, abra **SQL Editor → New query**, cole o conteúdo de [`supabase/schema.sql`](supabase/schema.sql) e clique em **Run**.
+3. Em **Project Settings → API**, copie a **Project URL** e a chave **anon public**.
+4. Copie `.env.example` para `.env` e preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+5. Reinicie o `npm run dev`. O aviso de "modo local" some e as salas passam a funcionar pelo link, atualizando ao vivo.
+
+> A chave *anon* é feita para ficar no navegador; quem protege os dados são as regras (RLS) do `schema.sql`.
+> Como o app não tem login, qualquer pessoa com o código da sala pode ver e editar aquela sala.
+
 ### Estrutura
 
 ```
 src/
   lib/genres.ts   # lista de gêneros (IDs da TMDB)
-  lib/room.ts     # salas e participantes (hoje: salvo no navegador)
+  lib/room.ts     # salas e participantes (Supabase ou modo local)
+  lib/useRoom.ts  # carrega a sala e atualiza ao vivo
   lib/match.ts    # cálculo de compatibilidade
   pages/          # Home, Sala, Gostos, Blend
+supabase/schema.sql  # tabelas e regras do banco
 ```
 
 ## Roadmap
@@ -57,7 +72,7 @@ src/
 - [x] Tela de escolha de gostos por gênero
 - [x] Blend por gênero: % do grupo, % por dupla, gêneros em comum
 - [ ] Integrar com a TMDB (buscar filmes, pôsteres) + swipe de filmes
-- [ ] Salas na nuvem (Supabase) para entrar de qualquer aparelho pelo link
+- [x] Salas na nuvem (Supabase) para entrar de qualquer aparelho pelo link, ao vivo
 - [ ] Algoritmo de compatibilidade e sugestões
 - [ ] Tela de resultado ("blend" com % de match)
 - [ ] Publicar online

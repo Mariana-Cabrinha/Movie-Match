@@ -1,11 +1,16 @@
 import { Link, useParams } from 'react-router-dom'
-import { getOrCreateRoom } from '../lib/room'
 import { groupCompatibility, pairCompatibility, rankGenres } from '../lib/match'
 import { genreById } from '../lib/genres'
+import { useRoom } from '../lib/useRoom'
+import { RoomStatus } from './RoomStatus'
 
 export default function Blend() {
   const { roomId = '' } = useParams()
-  const { members } = getOrCreateRoom(roomId)
+  const { state } = useRoom(roomId)
+
+  if (state.status !== 'ready') return <RoomStatus status={state.status} message={'message' in state ? state.message : undefined} />
+
+  const { members } = state.room
   const compat = groupCompatibility(members)
 
   if (compat === null)

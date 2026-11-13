@@ -88,3 +88,9 @@ a { color: inherit; }
 .bars li { display: grid; grid-template-columns: 9.5rem 1fr 3rem; align-items: center; gap: 10px; }
 .bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .bar div { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+.error { color: var(--dislike); margin: 0; font-size: 0.9rem; }
+.tag {
+  display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+  background: var(--surface-2); color: var(--muted); font-size: 0.75rem; vertical-align: middle;
+}
