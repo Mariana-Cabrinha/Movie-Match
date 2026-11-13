@@ -30,12 +30,34 @@ Um "blend" de gostos de filmes: cada pessoa do grupo escolhe o que curte, e o ap
 | Salas / respostas do grupo | Banco simples na nuvem (ex.: Supabase ou Firebase) |
 | Hospedagem | Vercel / Netlify (grátis) |
 
+## Rodando no seu computador
+
+Precisa do [Node.js](https://nodejs.org/) instalado.
+
+```bash
+npm install
+npm run dev
+```
+
+Abra http://localhost:5173 no navegador.
+
+### Estrutura
+
+```
+src/
+  lib/genres.ts   # lista de gêneros (IDs da TMDB)
+  lib/room.ts     # salas e participantes (hoje: salvo no navegador)
+  lib/match.ts    # cálculo de compatibilidade
+  pages/          # Home, Sala, Gostos, Blend
+```
+
 ## Roadmap
 
-- [ ] Definir stack e criar o esqueleto do app
-- [ ] Integrar com a TMDB (buscar filmes, gêneros, pôsteres)
-- [ ] Tela de escolha de gostos (gêneros + swipe de filmes)
-- [ ] Criar sala e entrar por link
+- [x] Definir stack e criar o esqueleto do app (Vite + React + TypeScript)
+- [x] Tela de escolha de gostos por gênero
+- [x] Blend por gênero: % do grupo, % por dupla, gêneros em comum
+- [ ] Integrar com a TMDB (buscar filmes, pôsteres) + swipe de filmes
+- [ ] Salas na nuvem (Supabase) para entrar de qualquer aparelho pelo link
 - [ ] Algoritmo de compatibilidade e sugestões
 - [ ] Tela de resultado ("blend" com % de match)
 - [ ] Publicar online
