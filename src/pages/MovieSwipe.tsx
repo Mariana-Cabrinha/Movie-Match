@@ -205,9 +205,15 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
           </div>
 
           <div className="swipe-actions">
-            <button type="button" className="round small-round" onClick={undo} disabled={history.length === 0} aria-label="Desfazer a última resposta">
-              <span>↩</span>
-              <span className="round-label">desfazer</span>
+            <button
+              type="button"
+              className="round undo-btn"
+              onClick={undo}
+              disabled={history.length === 0}
+              aria-label="Desfazer a última resposta"
+              title="Desfazer"
+            >
+              ↩
             </button>
             <button type="button" className="round dislike-btn" onClick={() => answer(-1)} aria-label="Não curti">✕</button>
             <button type="button" className="round small-round" onClick={() => answer(0)} aria-label="Não vi">

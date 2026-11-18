@@ -352,3 +352,12 @@ h1, h2 { letter-spacing: -0.02em; }
 .review-actions button.on.like { background: var(--like); border-color: var(--like); color: #0c2a1c; }
 .review-actions button.on.nope { background: var(--dislike); border-color: var(--dislike); color: #2a0c0c; }
 .round:disabled { opacity: 0.35; cursor: default; }
+
+/* Fileira do swipe: ✕ 🙈 ♥ sempre centralizados embaixo da carta;
+   o desfazer fica numa coluna à esquerda, sem empurrar os outros */
+.swipe-actions { display: grid; grid-template-columns: 1fr auto auto auto 1fr; gap: 22px; }
+.swipe-actions > :nth-child(2) { grid-column: 2; }
+.undo-btn {
+  grid-column: 1; justify-self: end; width: 40px; height: 40px; font-size: 1.1rem;
+  color: var(--muted); box-shadow: none;
+}
