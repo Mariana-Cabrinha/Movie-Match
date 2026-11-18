@@ -79,17 +79,3 @@ src/
   pages/          # Home, Sala, Gostos (+ swipe), Blend (+ sugestões)
 supabase/            # schema.sql e migrações do banco
 ```
-
-## Roadmap
-
-- [x] Definir stack e criar o esqueleto do app (Vite + React + TypeScript)
-- [x] Tela de escolha de gostos por gênero
-- [x] Blend por gênero: % do grupo, % por dupla, gêneros em comum
-- [x] Salas na nuvem (Supabase) para entrar de qualquer aparelho pelo link, ao vivo
-- [x] Integrar com a TMDB + swipe de filmes
-- [x] Sugestões de filmes com % de match do grupo e de cada pessoa
-- [x] Abas Filmes e Séries (com Anime e Dorama como categorias)
-- [x] Busca de favoritos ("cite 3 filmes ou séries que você ama")
-- [ ] Carta voando no swipe, fonte e logo, revelação animada do blend
-- [ ] IA (Claude) para refinar gostos e sugerir ideias ao grupo
-- [ ] Publicar online

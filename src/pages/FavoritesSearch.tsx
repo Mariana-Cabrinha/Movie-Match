@@ -66,7 +66,7 @@ export default function FavoritesSearch({ ratings, onChange, onBack, onNext }: P
         <button className="btn small ghost" type="button" onClick={onBack}>← Gêneros</button>
         <span className="step-label">Etapa 2 de 3 · Favoritos</span>
       </div>
-      <h2>Cite {SUGGESTED} filmes ou séries que você ama</h2>
+      <h2>Cite {SUGGESTED} (ou mais) filmes ou séries que você ama</h2>
       <p className="muted small">Pode ser qualquer coisa: filme, série, anime, dorama… Eles pesam mais no seu match.</p>
 
       {favorites.length > 0 && (
