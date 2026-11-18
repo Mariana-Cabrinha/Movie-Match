@@ -6,6 +6,7 @@ import { hasTmdb, type Kind } from '../lib/tmdb'
 import KindTabs from './KindTabs'
 import MovieSuggestions from './MovieSuggestions'
 import { AvatarStack } from './Avatar'
+import BlendReveal from './BlendReveal'
 
 function verdict(pct: number): string {
   if (pct >= 85) return 'Almas gêmeas do cinema 💞'
@@ -40,12 +41,7 @@ export default function Blend() {
       <div className="card center blend-hero">
         <AvatarStack members={members} size={44} />
         <p className="muted small">{members.map((m) => m.name).join(' + ')}</p>
-        <div className="ring" style={{ ['--pct' as string]: compat }}>
-          <span>
-            {compat}%<small>compatíveis</small>
-          </span>
-        </div>
-        <p className="verdict">{verdict(compat)}</p>
+        <BlendReveal pct={compat} verdict={verdict(compat)} />
       </div>
 
       <h3>🍿 Para vocês assistirem</h3>

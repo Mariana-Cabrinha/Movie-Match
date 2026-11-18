@@ -286,3 +286,50 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--accent-2); outl
   background: var(--surface-2); font-weight: 800; font-size: 1.1rem;
 }
 .search-item.picked .pick-mark { background: var(--like); color: #0c2a1c; }
+
+/* ---------- Carta voando (pilha) ---------- */
+.swipe-stack { display: grid; justify-items: center; }
+/* sem animação de entrada na pilha: a carta de baixo já "sobe" para o lugar,
+   e a animação de entrada atrapalhava o voo quando a pessoa responde rápido */
+.swipe-stack > .swipe-card { grid-area: 1 / 1; animation: none; }
+.swipe-card.top { z-index: 1; }
+.swipe-card.leaving { transition: transform 0.28s ease-in, opacity 0.28s ease-in; }
+.swipe-card.behind {
+  transform: scale(0.93) translateY(14px); filter: brightness(0.55);
+  transition: transform 0.28s ease-out, filter 0.28s ease-out; animation: none; pointer-events: none;
+}
+.swipe-card.behind.rising { transform: none; filter: none; }
+@media (prefers-reduced-motion: reduce) {
+  .swipe-card, .swipe-card.leaving, .swipe-card.behind { transition: none; animation: none; }
+}
+
+/* ---------- Identidade: fonte Outfit + logo ---------- */
+:root { --font-display: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif; }
+h1, h2, h3, h4, .btn, .chip, .kind-tabs button, .match-badge, .ring span, .code, .verdict, .step-label, .stamp, .logo {
+  font-family: var(--font-display);
+}
+h1, h2 { letter-spacing: -0.02em; }
+.hero { font-weight: 800; }
+.logo { display: inline-flex; }
+.logo-lockup { display: inline-flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 600; letter-spacing: -0.01em; }
+.logo-lockup b {
+  font-weight: 800; background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.logo-mark { flex-shrink: 0; }
+
+/* ---------- Revelação do blend ---------- */
+.blend-hero { position: relative; overflow: hidden; }
+.ring { background: conic-gradient(from 0deg, var(--accent), var(--accent-2) calc(var(--pct) * 1%), var(--surface-2) 0); }
+.verdict { min-height: 1.6em; opacity: 0; transform: translateY(6px); transition: opacity 0.4s, transform 0.4s; }
+.verdict.in { opacity: 1; transform: none; }
+.confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.confetti span {
+  position: absolute; top: -40px; animation-name: confetti-fall; animation-timing-function: cubic-bezier(0.3, 0.6, 0.5, 1);
+  animation-fill-mode: forwards; opacity: 0;
+}
+@keyframes confetti-fall {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate(var(--drift), 420px) rotate(320deg); opacity: 0; }
+}

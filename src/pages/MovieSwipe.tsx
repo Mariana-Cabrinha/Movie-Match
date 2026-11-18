@@ -15,6 +15,7 @@ type Props = {
 }
 
 const SWIPE_DISTANCE = 90 // px para contar como "arrastou"
+const FLY_MS = 280 // duração da carta voando para fora
 
 function shuffle<T>(list: T[]): T[] {
   const a = [...list]
@@ -62,14 +63,33 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
   const index = indexes[tab]
   const rated = Object.keys(ratings.movie).length + Object.keys(ratings.tv).length
   const movie = deck?.[index]
+  const nextMovie = deck?.[index + 1]
+  // Enquanto a carta voa para fora: 1 = direita, -1 = esquerda, 0 = para baixo
+  const [leaving, setLeaving] = useState<1 | -1 | 0 | null>(null)
 
   function answer(r: 1 | -1 | 0) {
-    if (!movie) return
+    if (!movie || leaving !== null) return
     if (r !== 0) onChange({ ...ratings, [movie.kind]: { ...ratings[movie.kind], [movie.id]: { r, g: movie.genreIds } } })
-    setDrag(0)
-    setShowInfo(false)
-    setIndexes((ix) => ({ ...ix, [tab]: ix[tab] + 1 }))
+    setLeaving(r)
+    setTimeout(() => {
+      setLeaving(null)
+      setDrag(0)
+      setShowInfo(false)
+      setIndexes((ix) => ({ ...ix, [tab]: ix[tab] + 1 }))
+    }, FLY_MS)
   }
+
+  // Posição da carta: seguindo o dedo, ou voando para fora
+  const cardTransform =
+    leaving === 1
+      ? 'translateX(150%) rotate(28deg)'
+      : leaving === -1
+        ? 'translateX(-150%) rotate(-28deg)'
+        : leaving === 0
+          ? 'translateY(110%) scale(0.9)'
+          : `translateX(${drag}px) rotate(${drag / 20}deg)`
+  const stampLike = leaving === 1 || (leaving === null && drag > 30)
+  const stampNope = leaving === -1 || (leaving === null && drag < -30)
 
   // Teclado: ← não curti, → curti, ↓ não vi
   useEffect(() => {
@@ -109,11 +129,19 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
 
       {deck && movie && (
         <>
+          <div className="swipe-stack">
+          {/* Próxima carta, esperando por baixo */}
+          {nextMovie && (
+            <div className={`swipe-card behind ${leaving !== null ? 'rising' : ''}`} aria-hidden="true">
+              {(nextMovie.posterLarge ?? nextMovie.poster) && <img src={nextMovie.posterLarge ?? nextMovie.poster!} alt="" draggable={false} />}
+            </div>
+          )}
           <div
-            key={movie.id}
-            className="swipe-card"
-            style={{ transform: `translateX(${drag}px) rotate(${drag / 20}deg)` }}
+            key={`${movie.kind}:${movie.id}`}
+            className={`swipe-card top ${leaving !== null ? 'leaving' : ''}`}
+            style={{ transform: cardTransform, opacity: leaving !== null ? 0 : 1 }}
             onPointerDown={(e) => {
+              if (leaving !== null) return
               start.current = e.clientX
               ;(e.target as HTMLElement).setPointerCapture?.(e.pointerId)
             }}
@@ -129,8 +157,8 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
               setDrag(0)
             }}
           >
-            {drag > 30 && <span className="stamp like-stamp">CURTI</span>}
-            {drag < -30 && <span className="stamp dislike-stamp">NÃO CURTI</span>}
+            {stampLike && <span className="stamp like-stamp">CURTI</span>}
+            {stampNope && <span className="stamp dislike-stamp">NÃO CURTI</span>}
             {(movie.posterLarge ?? movie.poster) && <img src={movie.posterLarge ?? movie.poster!} alt="" draggable={false} />}
             <div className="swipe-overlay">
               <h3>{movie.title} <span className="year">{movie.year}</span></h3>
@@ -148,6 +176,7 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
             >
               {showInfo ? '✕' : 'i'}
             </button>
+          </div>
           </div>
 
           <div className="swipe-actions">

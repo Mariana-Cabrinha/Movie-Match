@@ -3,12 +3,13 @@ import Home from './pages/Home'
 import RoomPage from './pages/Room'
 import Tastes from './pages/Tastes'
 import Blend from './pages/Blend'
+import { Logo } from './pages/Logo'
 
 export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <Link to="/" className="logo">🎬 Movie Match</Link>
+        <Link to="/" className="logo" aria-label="Movie Match — início"><Logo /></Link>
       </header>
       <main className="content">
         <Routes>
