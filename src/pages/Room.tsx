@@ -67,7 +67,7 @@ export default function RoomPage() {
         {members.map((m) => {
           const g = Object.values(m.genres).filter((v) => v === 1).length
           const all = [...Object.values(m.movies ?? {}), ...Object.values(m.series ?? {})]
-          const fav = all.filter((r) => r.fav).length
+          const fav = all.filter((r) => r.fav && r.r === 1).length
           const f = all.length
           return (
             <li key={m.id} className="member">

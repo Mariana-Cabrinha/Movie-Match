@@ -184,6 +184,12 @@ export async function searchTitles(query: string): Promise<Movie[]> {
     .map((m) => toMovie(m, m.media_type as Kind))
 }
 
+/** Detalhes de um título pelo ID (usado para mostrar avaliações antigas sem nome salvo). */
+export async function details(kind: Kind, id: number | string): Promise<Movie> {
+  const raw = await get<Raw & { genres?: { id: number }[] }>(`/${kind}/${id}`)
+  return toMovie({ ...raw, genre_ids: raw.genre_ids ?? raw.genres?.map((g) => g.id) }, kind)
+}
+
 /** Em alta na semana (vitrine da tela inicial). */
 export async function trending(kind: Kind = 'movie'): Promise<Movie[]> {
   const data = await get<Page>(`/trending/${kind}/week`)

@@ -145,7 +145,7 @@ function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
               : liked === 0
                 ? 'Marque pelo menos 1 gênero'
                 : hasTmdb
-                  ? 'Próximo: favoritos →'
+                  ? 'Próximo: seus títulos →'
                   : 'Salvar'}
         </button>
       </div>

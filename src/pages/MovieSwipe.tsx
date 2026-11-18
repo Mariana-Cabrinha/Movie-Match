@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { discover, uniqueMovies, type Kind, type Movie } from '../lib/tmdb'
-import type { GenrePrefs } from '../lib/room'
+import type { GenrePrefs, Rating } from '../lib/room'
 import { genreById } from '../lib/genres'
 import type { Ratings } from './Tastes'
 import KindTabs from './KindTabs'
@@ -67,9 +67,18 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
   // Enquanto a carta voa para fora: 1 = direita, -1 = esquerda, 0 = para baixo
   const [leaving, setLeaving] = useState<1 | -1 | 0 | null>(null)
 
+  // Histórico para o "Desfazer": o que havia antes de cada resposta
+  const [history, setHistory] = useState<{ kind: Kind; id: number; prev?: Rating }[]>([])
+
   function answer(r: 1 | -1 | 0) {
     if (!movie || leaving !== null) return
-    if (r !== 0) onChange({ ...ratings, [movie.kind]: { ...ratings[movie.kind], [movie.id]: { r, g: movie.genreIds } } })
+    setHistory((h) => [...h, { kind: movie.kind, id: movie.id, prev: ratings[movie.kind][movie.id] }])
+    // Guarda título e pôster para dar para revisar depois
+    if (r !== 0)
+      onChange({
+        ...ratings,
+        [movie.kind]: { ...ratings[movie.kind], [movie.id]: { r, g: movie.genreIds, t: movie.title, p: movie.posterPath } },
+      })
     setLeaving(r)
     setTimeout(() => {
       setLeaving(null)
@@ -77,6 +86,21 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
       setShowInfo(false)
       setIndexes((ix) => ({ ...ix, [tab]: ix[tab] + 1 }))
     }, FLY_MS)
+  }
+
+  /** Volta a última carta e desfaz a resposta dada a ela. */
+  function undo() {
+    const last = history[history.length - 1]
+    if (!last || leaving !== null) return
+    const map = { ...ratings[last.kind] }
+    if (last.prev) map[last.id] = last.prev
+    else delete map[last.id]
+    onChange({ ...ratings, [last.kind]: map })
+    setHistory((h) => h.slice(0, -1))
+    setTab(last.kind)
+    setDrag(0)
+    setShowInfo(false)
+    setIndexes((ix) => ({ ...ix, [last.kind]: Math.max(0, ix[last.kind] - 1) }))
   }
 
   // Posição da carta: seguindo o dedo, ou voando para fora
@@ -94,7 +118,8 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
   // Teclado: ← não curti, → curti, ↓ não vi
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'ArrowRight') answer(1)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') undo()
+      else if (e.key === 'ArrowRight') answer(1)
       else if (e.key === 'ArrowLeft') answer(-1)
       else if (e.key === 'ArrowDown') answer(0)
     }
@@ -105,7 +130,7 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
   return (
     <section className="stack">
       <div className="row between">
-        <button className="btn small ghost" type="button" onClick={onBack}>← Favoritos</button>
+        <button className="btn small ghost" type="button" onClick={onBack}>← Seus títulos</button>
         <span className="step-label">Etapa 3 de 3 · Swipe</span>
       </div>
       <div className="row between">
@@ -180,6 +205,10 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
           </div>
 
           <div className="swipe-actions">
+            <button type="button" className="round small-round" onClick={undo} disabled={history.length === 0} aria-label="Desfazer a última resposta">
+              <span>↩</span>
+              <span className="round-label">desfazer</span>
+            </button>
             <button type="button" className="round dislike-btn" onClick={() => answer(-1)} aria-label="Não curti">✕</button>
             <button type="button" className="round small-round" onClick={() => answer(0)} aria-label="Não vi">
               <span>🙈</span>
@@ -197,6 +226,9 @@ export default function MovieSwipe({ genres, ratings, onChange, saving, onBack, 
             <button type="button" className="btn small" onClick={() => setTab('tv')}>Avaliar séries →</button>
           )}
           <p className="muted small">Você avaliou {rated}. Pode salvar!</p>
+          {history.length > 0 && (
+            <button type="button" className="btn small ghost" onClick={undo}>↩ Desfazer a última</button>
+          )}
         </div>
       )}
 
