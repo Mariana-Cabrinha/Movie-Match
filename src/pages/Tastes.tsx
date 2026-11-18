@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { GENRES } from '../lib/genres'
-import { upsertMember, type GenrePrefs, type Member } from '../lib/room'
+import { upsertMember, type GenrePrefs, type Member, type MovieRatings } from '../lib/room'
+import { hasTmdb, type Kind } from '../lib/tmdb'
+import MovieSwipe from './MovieSwipe'
+import FavoritesSearch from './FavoritesSearch'
+
+export type Ratings = Record<Kind, MovieRatings>
 import { useRoom } from '../lib/useRoom'
 import { RoomStatus } from './RoomStatus'
 
@@ -43,12 +48,15 @@ function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
     })
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  const [step, setStep] = useState<'genres' | 'favorites' | 'swipe'>('genres')
+  // Avaliações de filmes e de séries, compartilhadas entre a busca e o swipe
+  const [ratings, setRatings] = useState<Ratings>({ movie: editing?.movies ?? {}, tv: editing?.series ?? {} })
+
+  async function save() {
     setSaving(true)
     setError(null)
     try {
-      await upsertMember(roomId, { id: editing?.id, name: name.trim(), genres })
+      await upsertMember(roomId, { id: editing?.id, name: name.trim(), genres, movies: ratings.movie, series: ratings.tv })
       navigate(`/s/${roomId}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -56,8 +64,41 @@ function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
     }
   }
 
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    // Com TMDB: segue para favoritos e swipe. Sem TMDB: salva direto.
+    if (hasTmdb) setStep('favorites')
+    else save()
+  }
+
+  if (step === 'favorites')
+    return (
+      <FavoritesSearch
+        ratings={ratings}
+        onChange={setRatings}
+        onBack={() => setStep('genres')}
+        onNext={() => setStep('swipe')}
+      />
+    )
+
+  if (step === 'swipe')
+    return (
+      <>
+        <MovieSwipe
+          genres={genres}
+          ratings={ratings}
+          onChange={setRatings}
+          saving={saving}
+          onBack={() => setStep('favorites')}
+          onDone={save}
+        />
+        {error && <p className="error">{error}</p>}
+      </>
+    )
+
   return (
     <form className="stack" onSubmit={handleSubmit}>
+      {hasTmdb && <p className="step-label">Etapa 1 de 3 · Gêneros</p>}
       <h2>{editing ? 'Editar gostos' : 'Seus gostos'}</h2>
       <input
         className="input"
@@ -69,9 +110,13 @@ function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
         aria-label="Seu nome"
       />
 
-      <p className="muted small">
-        Toque uma vez = <b className="like">gosto</b> · duas vezes = <b className="dislike">não curto</b> · três = tanto faz
-      </p>
+      <div className="legend small">
+        <span>Toque para marcar:</span>
+        <span className="chip on mini">✓ gosto</span>
+        <span className="muted">→</span>
+        <span className="chip off mini">✕ não curto</span>
+        <span className="muted">→ tanto faz</span>
+      </div>
 
       <div className="chips">
         {GENRES.map((g) => {
@@ -84,16 +129,26 @@ function TastesForm({ roomId, editing }: { roomId: string; editing?: Member }) {
               onClick={() => toggle(g.id)}
               aria-pressed={v !== undefined}
             >
-              {g.emoji} {g.name}
+              <span className="chip-mark">{v === 1 ? '✓' : v === -1 ? '✕' : g.emoji}</span> {g.name}
             </button>
           )
         })}
       </div>
 
       {error && <p className="error">{error}</p>}
-      <button className="btn primary big" type="submit" disabled={saving || !name.trim() || liked === 0}>
-        {saving ? 'Salvando…' : liked === 0 ? 'Escolha pelo menos 1 gênero' : 'Salvar'}
-      </button>
+      <div className="sticky-bottom">
+        <button className="btn primary big" type="submit" disabled={saving || !name.trim() || liked === 0}>
+          {saving
+            ? 'Salvando…'
+            : !name.trim()
+              ? 'Digite seu nome'
+              : liked === 0
+                ? 'Marque pelo menos 1 gênero'
+                : hasTmdb
+                  ? 'Próximo: favoritos →'
+                  : 'Salvar'}
+        </button>
+      </div>
     </form>
   )
 }

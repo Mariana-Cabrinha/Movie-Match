@@ -13,6 +13,8 @@ create table if not exists public.members (
   room_id     text not null references public.rooms(id) on delete cascade,
   name        text not null check (char_length(name) between 1 and 30),
   genres      jsonb not null default '{}'::jsonb,   -- { "35": 1, "27": -1, ... }
+  movies      jsonb not null default '{}'::jsonb,   -- { "550": { "r": 1, "g": [18, 53] }, ... }
+  series      jsonb not null default '{}'::jsonb,   -- mesmo formato, para séries
   updated_at  timestamptz not null default now()
 );
 

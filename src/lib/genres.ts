@@ -1,5 +1,5 @@
-// IDs oficiais de gêneros da TMDB — assim, quando integrarmos a API,
-// os gostos já batem direto com os filmes.
+// IDs oficiais de gêneros de FILMES da TMDB. Os gêneros de séries são
+// convertidos para estes em tmdb.ts, então uma lista só serve para os dois.
 export type Genre = { id: number; name: string; emoji: string }
 
 export const GENRES: Genre[] = [
@@ -21,6 +21,13 @@ export const GENRES: Genre[] = [
   { id: 53, name: 'Suspense', emoji: '😰' },
   { id: 10752, name: 'Guerra', emoji: '🪖' },
   { id: 37, name: 'Faroeste', emoji: '🤠' },
+  // Categorias extras do app (não são gêneros da TMDB): viram filtros de
+  // idioma/animação na busca. IDs altos para não colidir com os da TMDB.
+  { id: 90001, name: 'Anime', emoji: '🍥' },
+  { id: 90002, name: 'Dorama', emoji: '🌸' },
 ]
+
+export const ANIME = 90001
+export const DORAMA = 90002
 
 export const genreById = new Map(GENRES.map((g) => [g.id, g]))

@@ -4,6 +4,7 @@ import { isCloud, myMemberIds, removeMember } from '../lib/room'
 import { groupCompatibility } from '../lib/match'
 import { useRoom } from '../lib/useRoom'
 import { RoomStatus } from './RoomStatus'
+import { Avatar, AvatarStack } from './Avatar'
 
 export default function RoomPage() {
   const { roomId = '' } = useParams()
@@ -43,10 +44,15 @@ export default function RoomPage() {
 
   return (
     <section className="stack">
-      <div className="card">
-        <p className="muted small">Sala</p>
-        <h2 className="code">{roomId}</h2>
-        <button className="btn" onClick={share}>{copied ? 'Link copiado!' : 'Compartilhar link'}</button>
+      <div className="card room-card">
+        <div className="row between">
+          <div>
+            <p className="muted small">Código da sala</p>
+            <h2 className="code">{roomId}</h2>
+          </div>
+          {members.length > 0 && <AvatarStack members={members} size={34} />}
+        </div>
+        <button className="btn" onClick={share}>{copied ? '✓ Link copiado!' : '🔗 Compartilhar link'}</button>
         {!isCloud && (
           <p className="note">
             ⚠️ Modo local: as respostas ficam salvas só neste aparelho — passe o
@@ -58,26 +64,39 @@ export default function RoomPage() {
       <h3>Quem está na sala ({members.length})</h3>
       {members.length === 0 && <p className="muted">Ninguém ainda. Seja o primeiro!</p>}
       <ul className="members">
-        {members.map((m) => (
-          <li key={m.id} className="member">
-            <span className="avatar">{m.name.slice(0, 1).toUpperCase()}</span>
-            <span className="grow">
-              {m.name} {mine.has(m.id) && <span className="tag">você</span>}
-            </span>
-            <Link className="btn small" to={`/s/${roomId}/gostos?m=${m.id}`}>Editar</Link>
-            <button className="btn small ghost" aria-label={`Remover ${m.name}`} onClick={() => remove(m.id)}>✕</button>
-          </li>
-        ))}
+        {members.map((m) => {
+          const g = Object.values(m.genres).filter((v) => v === 1).length
+          const all = [...Object.values(m.movies ?? {}), ...Object.values(m.series ?? {})]
+          const fav = all.filter((r) => r.fav).length
+          const f = all.length
+          return (
+            <li key={m.id} className="member">
+              <Avatar member={m} size={36} />
+              <span className="grow">
+                <span className="member-name">
+                  {m.name} {mine.has(m.id) && <span className="tag">você</span>}
+                </span>
+                <span className="muted small">
+                  {g} gênero{g === 1 ? '' : 's'}
+                  {fav > 0 && ` · ${fav} favorito${fav === 1 ? '' : 's'}`}
+                  {f > 0 && ` · ${f} avaliado${f === 1 ? '' : 's'}`}
+                </span>
+              </span>
+              <Link className="btn small" to={`/s/${roomId}/gostos?m=${m.id}`}>Editar</Link>
+              <button className="btn small ghost" aria-label={`Remover ${m.name}`} onClick={() => remove(m.id)}>✕</button>
+            </li>
+          )
+        })}
       </ul>
       {error && <p className="error">{error}</p>}
 
-      <Link className="btn primary" to={`/s/${roomId}/gostos`}>
+      <Link className={`btn ${compat === null ? 'primary big' : ''}`} to={`/s/${roomId}/gostos`}>
         {mine.size === 0 ? '+ Adicionar meus gostos' : '+ Adicionar pessoa'}
       </Link>
 
       {compat !== null ? (
         <Link className="btn big accent-btn" to={`/s/${roomId}/blend`}>
-          Ver o blend do grupo · {compat}%
+          ✨ Ver o blend do grupo · {compat}%
         </Link>
       ) : (
         <p className="muted small center-text">O blend aparece quando houver pelo menos 2 pessoas.</p>

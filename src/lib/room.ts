@@ -8,7 +8,28 @@ import { supabase } from './supabase'
 /** 1 = gosto, -1 = não curto. Gêneros ausentes = tanto faz. */
 export type GenrePrefs = Record<number, 1 | -1>
 
-export type Member = { id: string; name: string; genres: GenrePrefs }
+/**
+ * Títulos avaliados, por ID da TMDB: r = 1 curti / -1 não curti,
+ * g = gêneros (guardados para calcular o gosto sem consultar a TMDB).
+ * Título avaliado = já visto, então não aparece nas sugestões.
+ * Favoritos (escolhidos na busca) têm fav = true, título (t) e pôster (p),
+ * e pesam o dobro no gosto da pessoa.
+ */
+export type Rating = { r: 1 | -1; g: number[]; fav?: true; t?: string; p?: string | null }
+export type MovieRatings = Record<string, Rating>
+
+export type Member = {
+  id: string
+  name: string
+  genres: GenrePrefs
+  movies?: MovieRatings // filmes
+  series?: MovieRatings // séries (inclui animes e doramas)
+}
+
+/** Avaliações de um tipo (filme ou série) de uma pessoa. */
+export function ratingsOf(member: Pick<Member, 'movies' | 'series'>, kind: 'movie' | 'tv'): MovieRatings {
+  return (kind === 'movie' ? member.movies : member.series) ?? {}
+}
 export type Room = { id: string; members: Member[] }
 
 export const isCloud = supabase !== null
@@ -89,7 +110,7 @@ export async function fetchRoom(id: string): Promise<Room | null> {
 
   const [roomRes, membersRes] = await Promise.all([
     supabase.from('rooms').select('id').eq('id', id).maybeSingle(),
-    supabase.from('members').select('id, name, genres').eq('room_id', id).order('updated_at'),
+    supabase.from('members').select('id, name, genres, movies, series').eq('room_id', id).order('updated_at'),
   ])
   if (roomRes.error) throw new Error(roomRes.error.message)
   if (membersRes.error) throw new Error(membersRes.error.message)
@@ -109,6 +130,8 @@ export async function upsertMember(
       room_id: roomId,
       name: full.name,
       genres: full.genres,
+      movies: full.movies ?? {},
+      series: full.series ?? {},
       updated_at: new Date().toISOString(),
     })
     if (error) throw new Error(`Não foi possível salvar: ${error.message}`)
@@ -144,9 +167,17 @@ export function subscribeRoom(roomId: string, onChange: () => void): () => void 
       .channel(`room:${roomId}`)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'members', filter: `room_id=eq.${roomId}` },
+        { event: 'INSERT', schema: 'public', table: 'members', filter: `room_id=eq.${roomId}` },
         () => onChange(),
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'members', filter: `room_id=eq.${roomId}` },
+        () => onChange(),
+      )
+      // O Supabase não aplica filtro em remoções (DELETE), então ouvimos todas
+      // e recarregamos a sala — barato para um app pequeno.
+      .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'members' }, () => onChange())
       .subscribe()
     return () => {
       client.removeChannel(channel)

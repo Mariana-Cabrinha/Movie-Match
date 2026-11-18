@@ -54,6 +54,19 @@ Sem configurar nada, o app roda em **modo local** (salas salvas só no navegador
 > A chave *anon* é feita para ficar no navegador; quem protege os dados são as regras (RLS) do `schema.sql`.
 > Como o app não tem login, qualquer pessoa com o código da sala pode ver e editar aquela sala.
 
+> **Já tinha criado o banco antes?** Rode também, em ordem, as migrações da pasta [`supabase/migrations/`](supabase/migrations/) no SQL Editor
+> (`002_filmes_avaliados.sql`, `003_series.sql`).
+
+### Ligando os filmes (TMDB)
+
+1. Crie uma conta grátis em https://www.themoviedb.org e peça uma chave de API em **Configurações → API** (uso pessoal).
+2. Copie o **Token de Leitura da API** (o texto longo que começa com `eyJ…`).
+3. Coloque no `.env`: `VITE_TMDB_TOKEN=eyJ...` e reinicie o `npm run dev`.
+
+Com isso aparecem o **swipe de filmes** depois dos gêneros e as **sugestões de filmes** no blend.
+
+> O token de leitura fica visível no navegador, mas ele só permite *ler* dados públicos de filmes.
+
 ### Estrutura
 
 ```
@@ -61,9 +74,10 @@ src/
   lib/genres.ts   # lista de gêneros (IDs da TMDB)
   lib/room.ts     # salas e participantes (Supabase ou modo local)
   lib/useRoom.ts  # carrega a sala e atualiza ao vivo
-  lib/match.ts    # cálculo de compatibilidade
-  pages/          # Home, Sala, Gostos, Blend
-supabase/schema.sql  # tabelas e regras do banco
+  lib/tmdb.ts     # busca filmes na TMDB
+  lib/match.ts    # compatibilidade entre pessoas e match de cada filme
+  pages/          # Home, Sala, Gostos (+ swipe), Blend (+ sugestões)
+supabase/            # schema.sql e migrações do banco
 ```
 
 ## Roadmap
@@ -71,8 +85,11 @@ supabase/schema.sql  # tabelas e regras do banco
 - [x] Definir stack e criar o esqueleto do app (Vite + React + TypeScript)
 - [x] Tela de escolha de gostos por gênero
 - [x] Blend por gênero: % do grupo, % por dupla, gêneros em comum
-- [ ] Integrar com a TMDB (buscar filmes, pôsteres) + swipe de filmes
 - [x] Salas na nuvem (Supabase) para entrar de qualquer aparelho pelo link, ao vivo
-- [ ] Algoritmo de compatibilidade e sugestões
-- [ ] Tela de resultado ("blend" com % de match)
+- [x] Integrar com a TMDB + swipe de filmes
+- [x] Sugestões de filmes com % de match do grupo e de cada pessoa
+- [x] Abas Filmes e Séries (com Anime e Dorama como categorias)
+- [x] Busca de favoritos ("cite 3 filmes ou séries que você ama")
+- [ ] Carta voando no swipe, fonte e logo, revelação animada do blend
+- [ ] IA (Claude) para refinar gostos e sugerir ideias ao grupo
 - [ ] Publicar online
