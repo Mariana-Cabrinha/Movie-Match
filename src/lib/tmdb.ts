@@ -140,11 +140,18 @@ const usable = (m: Raw) => Boolean(m.poster_path && m.overview)
  */
 export async function discover(
   kind: Kind,
-  opts: { withGenres?: number[]; withoutGenres?: number[]; page?: number },
+  opts: {
+    withGenres?: number[]
+    withoutGenres?: number[]
+    page?: number
+    /** popular (padrão) ou "top": os mais bem avaliados de todos os tempos */
+    sort?: 'popular' | 'top'
+  },
 ): Promise<Movie[]> {
+  const top = opts.sort === 'top'
   const base: Record<string, string | number> = {
-    sort_by: 'popularity.desc',
-    'vote_count.gte': kind === 'movie' ? 300 : 150,
+    sort_by: top ? 'vote_average.desc' : 'popularity.desc',
+    'vote_count.gte': top ? (kind === 'movie' ? 3000 : 800) : kind === 'movie' ? 300 : 150,
     include_adult: 'false',
     page: opts.page ?? 1,
   }

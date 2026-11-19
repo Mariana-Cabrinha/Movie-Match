@@ -54,7 +54,15 @@ export default function FavoritesSearch({ ratings, onChange, onBack, onNext }: P
   const all = entries(ratings)
   const loved = all.filter((e) => e.fav && e.r === 1)
   const hated = all.filter((e) => e.fav && e.r === -1)
-  const fromSwipe = all.filter((e) => !e.fav)
+  const fromSwipe = all.filter((e) => !e.fav && e.r !== 0)
+  const notSeen = all.filter((e) => e.r === 0)
+
+  /** Apaga os "não vi" para eles poderem aparecer de novo no swipe. */
+  function clearNotSeen() {
+    const next: Ratings = { movie: { ...ratings.movie }, tv: { ...ratings.tv } }
+    for (const e of notSeen) delete next[e.kind][e.id]
+    onChange(next)
+  }
   const picked = mode === 'love' ? loved : hated
   const value = mode === 'love' ? 1 : -1
 
@@ -162,6 +170,12 @@ export default function FavoritesSearch({ ratings, onChange, onBack, onNext }: P
       </ul>
 
       {fromSwipe.length > 0 && <ReviewList items={fromSwipe} onSet={set} />}
+      {notSeen.length > 0 && (
+        <p className="muted small not-seen-line">
+          🙈 {notSeen.length} marcado{notSeen.length === 1 ? '' : 's'} como "não vi" (não aparece{notSeen.length === 1 ? '' : 'm'} mais no swipe).{' '}
+          <button type="button" className="link-btn" onClick={clearNotSeen}>Mostrar de novo</button>
+        </p>
+      )}
 
       <div className="sticky-bottom">
         <button className={`btn big ${loved.length >= SUGGESTED ? 'primary' : ''}`} type="button" onClick={onNext}>

@@ -9,13 +9,17 @@ import { supabase } from './supabase'
 export type GenrePrefs = Record<number, 1 | -1>
 
 /**
- * Títulos avaliados, por ID da TMDB: r = 1 curti / -1 não curti,
+ * Títulos avaliados, por ID da TMDB: r = 1 curti / -1 não curti / 0 não vi,
  * g = gêneros (guardados para calcular o gosto sem consultar a TMDB).
- * Título avaliado = já visto, então não aparece nas sugestões.
- * Favoritos (escolhidos na busca) têm fav = true, título (t) e pôster (p),
+ * Curti/não curti = já visto, então não aparece nas sugestões.
+ * "Não vi" (0) não volta no swipe e conta como um leve desinteresse.
+ * Os escolhidos na busca têm fav = true, título (t) e pôster (p),
  * e pesam o dobro no gosto da pessoa.
  */
-export type Rating = { r: 1 | -1; g: number[]; fav?: true; t?: string; p?: string | null }
+export type Rating = { r: 1 | -1 | 0; g: number[]; fav?: true; t?: string; p?: string | null }
+
+/** Se a pessoa já viu (curtiu ou não curtiu) — "não vi" não conta. */
+export const hasSeen = (r: Rating | undefined) => r !== undefined && r.r !== 0
 export type MovieRatings = Record<string, Rating>
 
 export type Member = {

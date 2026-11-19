@@ -2,7 +2,8 @@ import { Link, useParams } from 'react-router-dom'
 import { groupCompatibility, memberCompatibility, rankGenres } from '../lib/match'
 import { genreById } from '../lib/genres'
 import { useState } from 'react'
-import { hasTmdb, type Kind } from '../lib/tmdb'
+import { hasTmdb, type Kind, type Movie } from '../lib/tmdb'
+import { myMemberIds, upsertMember } from '../lib/room'
 import KindTabs from './KindTabs'
 import MovieSuggestions from './MovieSuggestions'
 import { AvatarStack } from './Avatar'
@@ -31,6 +32,19 @@ export default function Blend() {
   if (compat === null)
     return <p>Precisa de pelo menos 2 pessoas. <Link to={`/s/${roomId}`}>Voltar para a sala</Link></p>
 
+  // "Você": a pessoa salva neste aparelho. Se houver mais de uma (passaram o
+  // celular), não dá para saber quem está olhando — aí não mostramos os botões.
+  const mineIds = new Set(myMemberIds(roomId))
+  const mine = members.filter((m) => mineIds.has(m.id))
+  const me = mine.length === 1 ? mine[0] : undefined
+
+  async function rate(movie: Movie, r: 1 | -1) {
+    if (!me) return
+    const field = movie.kind === 'movie' ? 'movies' : 'series'
+    const map = { ...(me[field] ?? {}), [movie.id]: { r, g: movie.genreIds, t: movie.title, p: movie.posterPath } }
+    await upsertMember(roomId, { ...me, [field]: map })
+  }
+
   const top = rankGenres(members).filter((g) => !g.vetoed && g.score > 0).slice(0, 5)
   const pairs = members.flatMap((a, i) =>
     members.slice(i + 1).map((b) => ({ a, b, pct: memberCompatibility(a, b) })),
@@ -47,7 +61,7 @@ export default function Blend() {
       <h3>🍿 Para vocês assistirem</h3>
       {hasTmdb && <KindTabs value={kind} onChange={setKind} />}
       {hasTmdb ? (
-        <MovieSuggestions members={members} kind={kind} />
+        <MovieSuggestions members={members} kind={kind} me={me} onRate={rate} />
       ) : (
         <p className="note">Configure o token da TMDB (VITE_TMDB_TOKEN no .env) para ver sugestões de filmes.</p>
       )}
